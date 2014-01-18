@@ -1,0 +1,19 @@
+Options +ExecCGI
+AddOutputFilter DEFLATE html js css
+<Files login>
+    SetHandler cgi-script
+</Files>
+<Files proxy>
+    SetHandler cgi-script
+    SetOutputFilter DEFLATE
+</Files>
+<Files image>
+    SetHandler cgi-script
+</Files>
+<Files passwd>
+    SetHandler cgi-script
+    AuthType Basic
+    AuthName kobatwi
+    AuthUserFile .passwd
+    Require valid-user
+</Files>

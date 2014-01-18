@@ -1,0 +1,190 @@
+html {
+    height: 100%;
+}
+body {
+    margin: 0px;
+    height: 100%;
+    background-color: #224;
+    color: #333;
+    font-size: 90%;
+}
+body > div {
+    margin: 0px auto;
+    max-width: 640px;
+    min-height: 100%;
+    height: auto;
+    background-color: #ddd;
+}
+a {
+    text-decoration: none;
+    color: #36c;
+}
+#loader       { text-align: center;   }
+#loader > img { margin:     50px 0px; }
+#login        { text-align: center;   }
+#login input  { margin:     50px 0px; }
+#login input {
+    font-size: 24px;
+    padding: 5px 1em;
+    border-radius: 20px;
+    color: #fff;
+    background-color: #0ad;
+}
+#menubar {
+    background-color: #333;
+}
+#menubar .selected {
+    background-color: #000;
+}
+#menubar:after { 
+    display: block;
+    content: '';
+    clear: both;
+    height: 0px;
+}
+#menubar h1 { display: none; }
+#menubar ul {
+    margin: 0px;
+    padding: 0px;
+    float: left;
+}
+#menubar ul + ul {
+    float: right;
+}
+#menubar li {
+    display: inline;
+    margin: 0px;
+    padding: 0px;
+    float: left;
+}
+#menubar li a {
+    display: block;
+    margin: 0px;
+    padding: 0px 8px;
+}
+#menubar img {
+    width:  24px;
+    height: 24px;
+    margin:  4px;
+    padding: 0px;
+}
+#menubar a[href="#user"] {}
+#menubar a[href="#user"] img {
+    border-radius: 2px;
+    width:  28px;
+    height: 28px;
+    margin:  2px;
+}
+#tweet {
+    margin: 5px;
+}
+#tweet .form textarea {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 100%;
+    height: 80px;
+    padding: 5px;
+    border-radius: 5px;
+    border: solid 1px #999;
+}
+#tweet .form div {
+    text-align: right;
+}
+#tweet .textlen {
+    color: #fff;
+    background-color: #999;
+    padding: 4px 1em;
+    border-radius: 4px;
+}
+#tweet .textlen.exceed {
+    color: #c00;
+    font-weight: bold;
+}
+#tweet input[type="button"] {
+    margin-top: 2px;
+    padding: 2px 1em;
+    border-radius: 10px;
+    background-color: #0ad;
+    color: white;
+}
+.connecter, #tweet .loading, #tweet .error {
+    text-align: center;
+    padding: 1em 0px;
+}
+.connecter img, #tweet .loading img, #tweet .error img {
+    width:  16px;
+    height: 16px;
+    vertical-align: text-bottom;
+}
+.status {
+    background-color: #fff;
+    margin: 1px 4px;
+    border-radius: 4px;
+    padding: 4px;
+    color: #999;
+}
+.status:after { display: block; content: ''; clear: both; }
+.status.new {
+    color: #000;
+}
+.status img.user_image {
+    margin-left: 0px;
+    width:  40px;
+    height: 40px;
+    border-radius: 4px;
+    float: left;
+}
+.status > * {
+    margin: 0px;
+    margin-left: 48px;
+}
+.status .media {
+    margin-left: 2px;    
+    width: 50px;
+    clear: right;
+    float: right;
+}
+.status .media img {
+    width: 50px;
+}
+.status h2 {
+    font-size: 1em;
+}
+.status h2 .screen_name {
+    color: #999;
+    font-weight: normal;
+}
+.status h2 .screen_name:before { content: '@'; }
+.status p.text:after { display: block; content: ''; clear: right; }
+.status a[href="#menu"] {
+    float: right;
+    margin-left: 0px;
+}
+.status a[href="#menu"] img {
+    width:  16px;
+    height: 16px;
+}
+.status a[href="#conversation"] {
+    float: left;
+}
+.status a[href="#conversation"] img {
+    margin:  2px;
+    width:  16px;
+    height: 16px;
+}
+.status .date {
+    font-style: italic;
+    text-align: right;
+    color: #999;
+}
+.status .retweet {
+    clear: both;
+    margin-top: 0.5em;
+}
+.status .retweet img.user_image {
+    width:  16px;
+    height: 16px; 
+    float:  none;   
+    vertical-align: text-bottom;
+}

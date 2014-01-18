@@ -1,0 +1,37 @@
+#!/usr/bin/perl -T
+
+use strict;
+use warnings;
+use CGI;
+use CGI::Session;
+use OAuth::Lite::Consumer;
+
+my %oauth_config = (
+    consumer_key        => '_____________________',
+    consumer_secret     => '_________________________________________',
+);
+my $api_base_url = 'https://api.twitter.com/1.1';
+
+my $cgi = new CGI;
+my $ua = new OAuth::Lite::Consumer(%oauth_config);
+
+my $session = new CGI::Session(undef, $cgi, {Directory=>'/tmp/session'});
+$session->expire('14d');
+
+my $access_token = $session->param('access_token');
+
+my %params = map { my @value = $cgi->param($_); $_ => \@value } $cgi->param;
+
+my $response = $ua->request(
+            method  => $cgi->request_method,
+            url     => $api_base_url.$cgi->path_info,
+            params  => \%params,
+            token   => $access_token,
+        );
+
+print   $session->header(
+            -status        => $response->code,
+            -type          => $response->header('Content-Type'),
+            -cache_control => 'no-cache',
+        ),
+        ($response->decoded_content || $response->content);

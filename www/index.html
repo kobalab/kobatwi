@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width; initial-scale=1.0" />
+    <meta charset="utf-8" />
+    <title>kobatwi</title>
+    <link rel="stylesheet" href="css/kobatwi.css" />
+    <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
+    <script src="js/kobatwi.js"></script>
+</head>
+
+<body>
+<div id="main" style="display:none;">
+    <div id="menubar">
+        <h1>kobatwi</h1>
+        <ul>
+            <li><a href="#home">
+                <img alt="Home" src="icon/home.png" /></a></li>
+            <li><a href="#mention">
+                <img alt="Mention" src="icon/mention.png" /></a></li>
+<!--
+            <li><a href="#message">
+                <img alt="Message" src="icon/message.png" /></a></li>
+-->
+        </ul>
+        <ul>
+            <li><a href="#tweet">
+                <img alt="Tweet" src="icon/tweet.png" /></a></li>
+            <li><a href="#user">
+                <img alt="User" /></a></li>
+        </ul>
+    </div>
+
+    <div id="tweet">
+        <div class="form">
+            <textarea></textarea>
+            <div>
+                <span class="textlen"></span>
+                <input type="button" value="Tweet" />
+            </div>
+        </div>
+        <div class="loading">
+            <img src="icon/ajax-loader-16.gif" />
+            Sending...</div>
+        <div class="error">
+            <img src="icon/error.png" />
+            ERROR!</div>
+    </div>
+
+    <div id="home" class="timeline"></div>
+    <div id="mention" class="timeline"></div>
+    <div id="message" class="timeline"></div>
+</div>
+
+<div id="login" style="display:none;">
+    <form method="POST" action="login">
+        <input type="submit" value="LOGIN on Twitter" />
+    </form>
+</div>
+
+<div id="loader">
+    <img src="icon/ajax-loader-32.gif" />
+</div>
+
+<!-- Template -->
+<div style="display:none;">
+<div class="connecter">
+    <div class="ready">
+        <img src="icon/refresh.png" /></div>
+    <div class="loading">
+        <img src="icon/ajax-loader-16.gif" />
+        Loading...</div>
+    <div class="error">
+        <img src="icon/error.png" />
+        ERROR!</div>
+</div>
+<div class="status">
+<!--
+    <p><a href="#menu"><img src="icon/reply.png" /></a></p>
+-->
+    <div class="media"></div>
+    <a href="#user"><img class="user_image" /></a>
+    <h2><a href="#user" class="user_name"></a>
+        <span class="screen_name"></span></h2>
+    <p class="text"></p>
+    <p><a href="#conversation"><img src="icon/conversation.png" /></a></p>
+    <p class="date"></p>
+    <p class="retweet">RT
+        <a href="#user"><img class="user_image" /></a>
+        <a href="#user" class="user_name"></a>
+    </p>
+</div>
+</div>
+</body>
+</html>

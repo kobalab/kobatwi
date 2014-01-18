@@ -1,0 +1,44 @@
+#!/usr/bin/perl -T
+
+use strict;
+use warnings;
+use CGI;
+use CGI::Session;
+use OAuth::Lite::Consumer;
+
+my %oauth_config = (
+    consumer_key        => '_____________________',
+    consumer_secret     => '_________________________________________',
+    request_token_path  => 'https://api.twitter.com/oauth/request_token',
+    authorize_path      => 'https://api.twitter.com/oauth/authorize',
+    access_token_path   => 'https://api.twitter.com/oauth/access_token',
+);
+
+my $cgi = new CGI;
+
+my $session = new CGI::Session(undef, $cgi, {Directory=>'/tmp/session'});
+$session->expire('14d');
+
+my $ua = new OAuth::Lite::Consumer(%oauth_config);
+
+if ($cgi->request_method eq 'POST') {
+
+    my $request_token = $ua->get_request_token(callback_url => $cgi->url);
+    $session->param(request_token=>$request_token);
+
+    my $url = $ua->url_to_authorize(token => $request_token);
+
+    print $session->header(-status=>302, -location=>$url);
+}
+elsif ($cgi->request_method eq 'GET') {
+
+    my $access_token = $ua->get_access_token(
+                            token    => $session->param('request_token'),
+                            verifier => $cgi->param('oauth_verifier'));
+    $session->param(access_token=>$access_token);
+
+    print $session->header(-status=>302, -location=>'./');
+}
+else {
+    print $session->header(-status=>405);
+}

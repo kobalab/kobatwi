@@ -1,0 +1,20 @@
+#!/usr/bin/perl -T
+
+use strict;
+use warnings;
+use CGI;
+use LWP::UserAgent;
+
+my $cgi = new CGI;
+my $ua = new LWP::UserAgent;
+
+my $url = "http:/$ENV{PATH_INFO}";
+
+my $response = $ua->get($url);
+
+print   $cgi->header(
+            -status         => $response->code,
+            -type           => $response->header('Content-Type'),
+            -last_modified  => $response->header('Last-Modified'),
+        ),
+        ($response->decoded_content || $response->content);
