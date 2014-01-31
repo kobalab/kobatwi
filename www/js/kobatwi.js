@@ -1,9 +1,20 @@
+/*
+ *  Configure jQuery Mobile
+ */
+$(document).on('mobileinit', function(){
+    $.mobile.ajaxEnabled = false;
+});
+
+
+/*
+ *  kobatwi
+ */
 var kobatwi;
 
 (function(){
 
 /*
- *  Utility function
+ *  Utility functions
  */
 function dateStr(str) {
     var date = new Date(str);
@@ -22,262 +33,15 @@ function dateStr(str) {
         datestr = date.getFullYear() + '/' + datestr;
     return datestr;
 }
-function extId(id, baseId) {
-    return (baseId.replace(/./g, ' ') + id).slice(-baseId.length);
-}
 function spliceText(src, from, to, replace) {
     var text = new String(src);
     return text.slice(0, from) + replace + text.slice(to);
 }
-
-/*
- *  URL of Twitter API
- */
-var apiBaseUrl  = 'proxy/';
-var apiAccount  = apiBaseUrl + 'account/verify_credentials.json';
-var apiTweet    = apiBaseUrl + 'statuses/update.json';
-var apiHomeTL   = apiBaseUrl + 'statuses/home_timeline.json';
-var apiMention  = apiBaseUrl + 'statuses/mentions_timeline.json';
-var apiUserTL   = apiBaseUrl + 'statuses/user_timeline.json';
-
-/*
- *  Setting DOM tenplate
- */
-var template = {};
-
-function init() {
-    template.connecter = $('.connecter').remove().eq(0);
-    template.status    = $('.status').remove().eq(0);
-    showLoader();
-}
-
-/*
- *  Loader, Login and Main
- */
-function showLoader() {
-    $('#main, #login').hide();
-    $('#loader').show();
-}
-function showLogin() {
-    $('#main, #loader').hide();
-    $('#login').show();
-}
-function showMain(user) {
-    setMenubar(user);
-    $('#loader, #login').hide();
-    $('#main').show();
-}
-
-/*
- *  Menubar
- */
-function setMenubar(user) {
-
-    $('#menubar a[href="#user"] img')
-        .attr('src', kobatwi.imageUrl(user.profile_image_url));
-
-    $('#menubar a[href^=#]').click(function(){ return false });
-    
-    setPanel('#home');
-    setPanel('#mention');
-    setTweet();
-
-    $('#menubar a[href="#home"]').click();
-}
-
-/*
- *  Tweet
- */
-function setTweet() {
-    
-    var tweetForm = $('#tweet');
-
-    tweetForm.hide();
-    $('#tweet .textlen').text(140);
-
-    $('#menubar a[href="#tweet"]').click(function(){
-        if (tweetForm.css('display') == 'none') {
-            tweetForm.find('.loading, .error').hide();
-            tweetForm.find('.form').show();
-            tweetForm.slideDown();
-        }
-        else tweetForm.slideUp();
-        return false;
-    });
-
-    tweetForm.find('.error').click(function(){
-        tweetForm.hide();
-        $('#menubar a[href="#tweet"]').click();
-    });
-    
-    var timeId;
-    $('#tweet textarea').blur(function(){
-        clearInterval(timeId);
-    });
-    $('#tweet textarea').focus(function(){
-        timeId = setInterval(function(){
-            var textlen = 140 - $('#tweet textarea').val().length;
-            $('#tweet .textlen').text(textlen);
-            if (textlen < 0) $('#tweet .textlen').addClass('exceed');
-            else             $('#tweet .textlen').removeClass('exceed');
-        }, 500);
-    });
-
-    $('#tweet input[type=button]').click(function(){
-        var text = $('#tweet textarea').val();
-        if (text == '') return false;
-        tweetForm.find('.form').fadeOut('normal', function(){
-            tweetForm.find('.loading').show();
-        });
-        kobatwi.tweet(text, {},
-            function(){
-                $('#tweet textarea').val('');
-                tweetForm.slideUp('slow', function(){
-                    $('#menubar a[href="#home"]').click();
-                });
-            },
-            function(){
-                tweetForm.find('.loading').hide();
-                tweetForm.find('.error').show();
-            }
-        );
-        return false;
-    });
-}
-
-/*
- *  Panel
- */
-function setPanel(type) {
-
-    var panel = $(type);
-
-    var connecter = newConnecter(type, {count: 20});
-    panel.prepend(connecter);
-
-    $('#menubar a[href="'+type+'"]').click(function(){
-        $('#menubar a[href^=#]').removeClass('selected');
-        $('#menubar a[href="'+type+'"]').addClass('selected');
-        $('#tweet').slideUp(function(){
-            $('#menubar').nextAll().hide();
-            panel.show();
-        });
-        panel.find('.status').removeClass('new').trigger('update');
-        connecter.slideDown().click();
-        return false;
-    });
-}
-
-/*
- *  Connecter and Timeline
- */
-function newConnecter(type, params) {
-
-    var connecter = template.connecter.clone();
-
-    connecter.find('.ready, .loading, .error').hide();
-    connecter.find('.ready').show();
-
-    connecter.click(function(){
-        connecter.find('.ready, .loading, .error').hide();
-        connecter.find('.loading').show();
-        kobatwi.getTimeline(connecter, type, params,
-            setTimeline,
-            function(){
-                connecter.find('.ready, .loading, .error').hide();
-                connecter.find('.error').show();            
-            }
-        );
-    });
-    return connecter;
-}
-function setTimeline(connecter, type, params, timeline) {
-
-    if (timeline.length > 0
-        && timeline[timeline.length - 1].id_str != params.since_id)
-    {
-        var newParams = {};
-        for (var key in params) {
-            newParams[key] = params[key];
-        }
-        newParams.max_id = timeline[timeline.length - 1].id_str;
-        connecter.after(
-            newConnecter(type, newParams)
-        );
-    }
-
-    connecter.after(
-        $.map(timeline, function(n){
-            if (n.id_str == params.since_id) return null;
-            return newStatus(type, n).addClass('new');
-        })
-    );
-
-    if (params.max_id == null) {
-        if (timeline.length > 0) params.since_id = timeline[0].id_str;
-        connecter.slideUp('normal', function(){
-            connecter.find('.ready, .loading, .error').hide();
-            connecter.find('.ready').show();
-        });
-    }
-    else {
-        connecter.slideUp('normal', function(){
-            connecter.remove();
-        });
-    }
-}
-
-/*
- *  Status
- */
-function newStatus(type, data) {
-
-    var status = template.status.clone();
-    
-    var retweet;
-    if (data.retweeted_status == null || type == '#mention')
-        status.find('.retweet').remove();
-    else {
-        retweet = data;
-        data = data.retweeted_status;
-    }    
-
-    status.find('.user_image')
-        .attr('src', kobatwi.imageUrl(data.user.profile_image_url));
-    status.find('.user_name').html(data.user.name);
-    status.find('.screen_name').html(data.user.screen_name);
-    status.find('.text').html(insertEntities(data.text, data.entities));
-    status.find('.date').text(dateStr(data.created_at));
-    if (data.in_reply_to_status_id_str == null)
-            status.find('a[href="#conversation"]').remove();
-
-    if (retweet != null) {
-        status.find('.retweet .user_image')
-            .attr('src', kobatwi.imageUrl(retweet.user.profile_image_url));
-        status.find('.retweet .user_name').html(retweet.user.name);
-        status.find('.retweet .screen_name').html(retweet.user.screen_name);
-    }
-
-    if (data.entities.media != null)
-        status.find('.media').append(
-            $.map(data.entities.media, function(n){
-                return $('<a target="_blank"></a>').attr('href',
-                                kobatwi.imageUrl(n.media_url + ':medium'))
-                            .append($('<img />').attr('src',
-                                kobatwi.imageUrl(n.media_url + ':thumb')));
-            })
-        );
-    
-    var date = data.created_at;
-    status.bind('update', function(){
-        status.find('.date').text(dateStr(date));
-    });
-
-    status.find('a[href^=#]').click(function(){ return false });
-
-    return status;
-}
 function insertEntities(text, entities) {
+    /*
+     *  TODO
+     *  textに副作用があるので直した方が良さそう。
+     */
     var replace = entities.urls.slice(0);
     if (entities.media != null)
         replace = replace.concat(entities.media.slice(0));
@@ -293,7 +57,232 @@ function insertEntities(text, entities) {
 }
 
 /*
- *  Start and Call API
+ *  URL of Twitter API
+ */
+var apiBaseUrl  = 'proxy/';
+var apiAccount  = apiBaseUrl + 'account/verify_credentials.json';
+var apiTweet    = apiBaseUrl + 'statuses/update.json';
+var apiHomeTl   = apiBaseUrl + 'statuses/home_timeline.json';
+var apiMention  = apiBaseUrl + 'statuses/mentions_timeline.json';
+
+/*
+ *  Initialize
+ */
+var template = {};
+
+function getTemplate() {
+    template.tweet_form = $('.tweet_form').remove().eq(0);
+    template.connecter  = $('.connecter').remove().eq(0);
+    template.status     = $('.status').remove().eq(0);
+    template.account    = $('.account').remove().eq(0);
+}
+function setConnecter() {
+    $('#tweet .content').append(template.tweet_form);
+    $('#home .timeline').append(newConnecter(apiHomeTl, {}).hide());
+    $('#mention .timeline').append(newConnecter(apiMention, {}).hide());
+ 
+    $('#tweet .sending, #tweet .error').hide();
+}
+function setHandler() {
+
+    $(document).on('click', '.connecter', function(event){
+        var connecter = $(this);
+        connecter.find('.ready, .loading, .error').hide();
+        connecter.find('.loading').show();
+        kobatwi.getTimeline(connecter,
+            setTimeline,
+            function(){
+                connecter.find('.ready, .loading, .error').hide();
+                connecter.find('.error').show();
+            }
+        );
+        return false;
+    });
+
+    $('#home').on('click', 'a[href="#home"]', function(){
+        $.mobile.silentScroll(0);
+    });
+    $('#mention').on('click', 'a[href="#mention"]', function(){
+        $.mobile.silentScroll(0);
+    });
+
+    $(document).on('click', 'a[href="#home"]', function(){
+        $('#home .timeline .status').removeClass('new').trigger('update');
+        $('#home .timeline .connecter').eq(0).slideDown().click();
+    });
+    $(document).on('click', 'a[href="#mention"]', function(){
+        $('#mention .timeline .status').removeClass('new').trigger('update');
+        $('#mention .timeline .connecter').eq(0).slideDown().click();
+    });
+ 
+    $(document).on('update', '.status', function(){
+        $(this).find('.date').text(dateStr($(this).data('date')));
+    });
+ 
+    $('#tweet textarea').on('focus', function(){
+        timeId = setInterval(function(){
+            var textlen = 140 - $('#tweet textarea').val().length;
+            $('#tweet .textlen').text(textlen);
+            if (textlen < 0) $('#tweet .textlen').addClass('exceed');
+            else             $('#tweet .textlen').removeClass('exceed');
+        }, 500);
+    });
+    $('#tweet').on('click', 'input[type="submit"]', function(){
+        var tweet = $('#tweet');
+        tweet.find('form').hide();
+        tweet.find('.sending').show();
+        kobatwi.tweet(
+            tweet,
+            function(){
+                tweet.find('.sending').hide();
+                $.mobile.changePage('#home', { transition: 'none' });
+                $('#home a[href="#home"]').click();
+                tweet.find('textarea').val('');
+                tweet.find('form').show();
+            },
+            function(){
+                tweet.find('.sending').hide();
+                tweet.find('.error').show();
+            }
+        );
+        return false;
+    });
+    $('#tweet').on('click', '.error', function(){
+        var tweet = $('#tweet');
+        tweet.find('.error').hide();
+        tweet.find('form').show();
+        return false;
+    });
+}
+
+/*
+ *  Loader, Login and Home
+ */
+function showLoader() {
+    $.mobile.changePage('#home', { transition: 'none' });
+    $('[data-id="footer"]').hide();
+    $('.login').hide();
+    $('.loader').show();
+    $('.timeline').hide();
+}
+function showLoginForm() {
+    $('.loader').hide();
+    $('.login').show();
+}
+function showHomePage(account) {
+    $('.init').remove();
+    $('[data-id="footer"]').slideDown();
+
+    $('#account .content').append(newAccount(account));
+    $('.timeline').show();
+    $('#home .timeline .connecter').eq(0).slideDown().click();
+}
+
+/*
+ *  Connecter
+ */
+function newConnecter(url, data) {
+    var connecter = template.connecter.clone();
+
+    connecter.data('api', { url: url, data: data });
+    connecter.find('.ready, .loading, .error').hide();
+    connecter.find('.ready').show();
+
+    return connecter;
+}
+function setTimeline(connecter, timeline){
+
+    var api = connecter.data('api');
+
+    if (timeline.length > 0
+        && timeline[timeline.length - 1].id_str != api.data.since_id)
+    {
+        var data = {};
+        for (var key in api.data) {
+            data[key] = api.data[key];
+        }
+        data.max_id = timeline[timeline.length - 1].id_str;
+        connecter.after(newConnecter(api.url, data));
+    }
+    connecter.after(
+        $.map(timeline, function(n){
+            if (n.id_str == api.data.since_id) return null;
+            return newStatus(n).addClass('new');
+        })
+    );
+    connecter.slideUp('normal', function(){
+        if (connecter.data('api').data.max_id == null) {
+            if (timeline.length > 0) api.data.since_id = timeline[0].id_str;
+            connecter.find('.ready, .loading, .error').hide();
+            connecter.find('.ready').show();
+        }
+        else connecter.remove();
+    });
+}
+
+/*
+ *  Status
+ */
+function newStatus(data){
+    var status = template.status.clone();
+
+    var retweet;
+    if (data.retweeted_status == null)
+        status.find('.retweet').remove();
+    else {
+        retweet = data;
+        data = data.retweeted_status;
+    }
+
+    status.find('img.profile_image')
+        .attr('src', kobatwi.imageUrl(data.user.profile_image_url));
+    status.find('.name').text(data.user.name);
+    status.find('.screen_name').text(data.user.screen_name);
+    status.find('.text').html(insertEntities(data.text, data.entities));
+    if (data.in_reply_to_status_id_str == null)
+        status.find('a[href="#conversation"]').remove();
+    status.find('.date').text(dateStr(data.created_at));
+    status.data('date', data.created_at);
+
+    if (retweet != null) {
+        status.find('.retweet img.profile_image')
+            .attr('src', kobatwi.imageUrl(retweet.user.profile_image_url));
+        status.find('.retweet .name').text(retweet.user.name);
+        status.find('.retweet .screen_name').text(retweet.user.screen_name);
+    }
+
+    if (data.entities.media != null)
+        status.find('.media').append(
+            $.map(data.entities.media, function(n){
+                return $('<a target="_blank"></a>').attr('href',
+                                kobatwi.imageUrl(n.media_url + ':medium'))
+                            .append($('<img />').attr('src',
+                                kobatwi.imageUrl(n.media_url + ':thumb')));
+            })
+        );
+
+    return status;
+}
+
+/*
+ *  Account
+ */
+function newAccount(data) {
+    var account = template.account.clone();
+
+    account.find('img.profile_image')
+        .attr('src', kobatwi.imageUrl(data.profile_image_url));
+    account.find('.name').text(data.name);
+    account.find('.screen_name').text(data.screen_name);
+    account.find('.location').text(data.location);
+    account.find('.url').html(insertEntities(data.url, data.entities.url));
+    account.find('.description').text(data.description);
+
+    return account;
+}
+
+/*
+ *  Methods
  */
 kobatwi = {
 
@@ -309,53 +298,68 @@ kobatwi = {
             error:    error
         });
     },
-    tweet: function(text, params, success, error) {
-        params.status = text;
+
+    tweet: function(tweet, success, error) {
+        var data = {};
+        data.status = tweet.find('textarea').val();
         $.ajax({
             type:     'POST',
             url:      apiTweet,
-            data:     params,
+            data:     data,
             dataType: 'json',
             success:  success,
-            error:    error,
+            error:    error
         });
     },
-    getTimeline: function(connecter, type, params, success, error) {
-        var url = (type == '#home')     ? apiHomeTL
-                : (type == '#mention')  ? apiMention
-                :                         null;
-        
-        var callParams = {};
-        for (var key in params) {
-            callParams[key] = params[key];
+
+    getTimeline: function(connecter, success, error) {
+ 
+        var api = connecter.data('api');
+ 
+        var data = {};
+        for (var key in api.data) {
+            data[key] = api.data[key];
         }
-        delete callParams.since_id;
-        
+        delete data.since_id;
+ 
         $.ajax({
-            url:      url,
-            data:     callParams,
+            url:      api.url,
+            data:     data,
             dataType: 'json',
             success:  function(timeline){
                 timeline = $.grep(timeline, function(n){
-                    return      (params.max_id == null
-                                || params.max_id
-                                        > extId(n.id_str, params.max_id))
-                            &&  (params.since_id == null
-                                || extId(n.id_str, params.since_id)
-                                        >= params.since_id);
+                    return      (api.data.max_id == null
+                                || api.data.max_id.length >  n.id_str.length
+                                || api.data.max_id.length == n.id_str.length
+                                    && api.data.max_id > n.id_str)
+                            &&  (api.data.since_id == null
+                                || n.id_str.length >  api.data.since_id.length
+                                || n.id_str.length == api.data.since_id.length
+                                    && n.id_str >= api.data.since_id);
                 });
-                success(connecter, type, params, timeline);
+                success(connecter, timeline);
             },
-            error:    error        
+            error:    error
         });
     },
-    
-    start: function() {
-        init();
-        kobatwi.getAccount(showMain, showLogin);
-    }    
-}
 
+    start: function() {
+        showLoader();
+        getTemplate();
+        setConnecter();
+        setHandler();
+ 
+        kobatwi.getAccount(showHomePage, showLoginForm);
+    }
+}
 })();
 
-$(function(){kobatwi.start()});
+$(function(){
+    var init = false;
+    $(document).on('pageinit', function(){
+        if (! init) {
+            init = true;
+            kobatwi.start();
+        }
+    });
+});
