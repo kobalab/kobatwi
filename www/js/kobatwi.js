@@ -77,10 +77,12 @@ function getTemplate() {
     template.account    = $('.account').remove().eq(0);
 }
 function setConnecter() {
-    $('#tweet .content').append(template.tweet_form);
     $('#home .timeline').append(newConnecter(apiHomeTl, {}).hide());
     $('#mention .timeline').append(newConnecter(apiMention, {}).hide());
- 
+}
+function setTweetForm() {
+    $('#tweet .content .tweet_form').remove();
+    $('#tweet .content').append(template.tweet_form.clone());
     $('#tweet .sending, #tweet .error').hide();
 }
 function setHandler() {
@@ -134,11 +136,10 @@ function setHandler() {
         kobatwi.tweet(
             tweet,
             function(){
-                tweet.find('.sending').hide();
+                setTweetForm();
+                $('#tweet .tweet_form').trigger('create');
                 $.mobile.changePage('#home', { transition: 'none' });
                 $('#home a[href="#home"]').click();
-                tweet.find('textarea').val('');
-                tweet.find('form').show();
             },
             function(){
                 tweet.find('.sending').hide();
@@ -347,6 +348,7 @@ kobatwi = {
         showLoader();
         getTemplate();
         setConnecter();
+        setTweetForm();
         setHandler();
  
         kobatwi.getAccount(showHomePage, showLoginForm);
