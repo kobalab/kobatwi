@@ -121,7 +121,7 @@ function setHandler() {
         $(this).find('.date').text(dateStr($(this).data('date')));
     });
  
-    $('#tweet textarea').on('focus', function(){
+    $('#tweet').on('focus', 'textarea', function(){
         timeId = setInterval(function(){
             var textlen = 140 - $('#tweet textarea').val().length;
             $('#tweet .textlen').text(textlen);
@@ -347,9 +347,9 @@ kobatwi = {
     start: function() {
         showLoader();
         getTemplate();
+        setHandler();
         setConnecter();
         setTweetForm();
-        setHandler();
  
         kobatwi.getAccount(showHomePage, showLoginForm);
     }
